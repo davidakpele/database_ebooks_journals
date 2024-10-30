@@ -1,0 +1,58 @@
+{
+  "short_name": "Skybase platform provides access to journals, books and databases",
+  "name": "Skybase",
+  "icons": [
+    {
+      "src": "http://localhost/skybase/public/assets/img/icon-plain.svg",
+      "type": "image/svg+xml",
+      "sizes": "150x150",
+      "purpose": "maskable"
+    },
+    {
+      "src": "http://localhost/skybase/public/assets/icons/android-chrome-512x512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "maskable"
+    },
+    {
+      "src": "http://localhost/skybase/public/assets/img/icon-safe-zone.svg",
+      "type": "image/svg+xml",
+      "sizes": "150x150",
+      "purpose": "any"
+    }
+  ],
+  "start_url": "http://localhost/skybase/Management/Log/",
+  "background_color": "#3367D6",
+  "display": "standalone",
+  "scope": "http://localhost/skybase/",
+  "theme_color": "#3367D6",
+  "shortcuts": [
+    {
+      "name": "Skybase",
+      "short_name": "Skybase platform provides access to journals, books and databases",
+      "description": "This platform provides access to journals, books and databases from RSC Publishing, linking over 1 million chemical science articles and chapters. You can access the latest research of interest using the custom eAlerts, RSS feeds and blogs or you can explore content using the quick and advanced searches. Discover the highest quality integrated scientific research today - search faster, navigate smarter and connect more.",
+      "url": "http://localhost/skybase/Management/Log/",
+      "icons": [{ "src": "http://localhost/skybase/public/assets/icons/android-chrome-512x512.png", "sizes": "512x512" }]
+    },
+    {
+      "name": "Skybase",
+      "short_name": "Skybase platform provides access to journals, books and databases",
+      "description": "This platform provides access to journals, books and databases from RSC Publishing, linking over 1 million chemical science articles and chapters. You can access the latest research of interest using the custom eAlerts, RSS feeds and blogs or you can explore content using the quick and advanced searches. Discover the highest quality integrated scientific research today - search faster, navigate smarter and connect more.",
+      "url": "http://localhost/skybase/Management/Log/",
+       "icons": [{ "src": "http://localhost/skybase/public/assets/img/monochrome-icon-tinted.svg", "sizes": "150x150" }]
+    }
+  ],
+  "description": "This platform provides access to journals, books and databases from RSC Publishing, linking over 1 million chemical science articles and chapters. You can access the latest research of interest using the custom eAlerts, RSS feeds and blogs or you can explore content using the quick and advanced searches. Discover the highest quality integrated scientific research today - search faster, navigate smarter and connect more.",
+  "screenshots": [
+    {
+      "src": "http://localhost/skybase/public/assets/img/icon-mask-android-squircle.svg",
+      "type": "image/svg+xml",
+      "sizes": "150x150"
+    },
+    {
+      "src": "http://localhost/skybase/public/assets/icons/android-chrome-512x512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}

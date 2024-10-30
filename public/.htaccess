@@ -1,0 +1,39 @@
+<IfModule mod_rewrite.c>
+    <IfModule mod_negotiation.c>
+        Options -MultiViews -Indexes
+        Options +MultiViews
+        Options +FollowSymLinks
+    </IfModule>
+  
+    RewriteEngine On
+    
+    RewriteCond %{QUERY_STRING} mosConfig_[a-zA-Z_]{1,21}(=|\%3D) [OR]
+    RewriteCond %{QUERY_STRING} base64_encode.*(.*) [OR]
+    RewriteCond %{QUERY_STRING} (<|%3C).*script.*(>|%3E) [NC,OR]
+    RewriteCond %{QUERY_STRING} GLOBALS(=|[|\%[0-9A-Z]{0,2}) [OR]
+    RewriteCond %{QUERY_STRING} _REQUEST(=|[|\%[0-9A-Z]{0,2})
+    RewriteRule ^(.*)$ index.php [F,L]
+
+    #Handle Authorization Header
+    RewriteCond %{HTTP:Authorization} .+
+    RewriteRule ^ - [E=HTTP_AUTHORIZATION:%0]
+    #Removing Public From The Url
+    RewriteBase /sky/public
+
+    #Redirect Trailing Slashes If Not A Folder...
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+
+    #Remove extensions
+    RewriteCond %{REQUEST_URI} !^/index.php
+    RewriteCond %{REQUEST_URI} (/|.php|.html|.htm|.feed|.pdf|.raw|/[^.]*)$  [NC]
+    RewriteCond $1 !^(app|css|js|jpg|png|gif|jpeg|asset|img|fonts|robots\.txt)
+    RewriteRule ^(.+)$ index.php?url=$1 [QSA,L]
+
+    RewriteCond %{QUERY_STRING}  ^task=view$ [NC]
+    RewriteRule ^(.*)$ $1? [R=301,L]
+
+    RewriteCond %{THE_REQUEST} \s/+(.+?)\.php[\s?] [NC]
+    RewriteRule ^ /%1 [R=301,NE,L]
+
+</IfModule>

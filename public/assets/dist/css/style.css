@@ -1,0 +1,93 @@
+.auth-widget {
+    background: url(../../images/TomHegen.jpg);
+    background-repeat: no-repeat;
+    background-size: auto;
+}
+
+.topform {
+    padding-top: 100px;
+}
+
+.miniContainer {
+    margin: 0 auto;
+    padding: 10px 10px 10px 11px;
+}
+
+.formWidget {
+    margin-top: 50px;
+    background: rgba(255, 255, 255, 0.671);
+    border-radius: 5px;
+    border: 1px solid #fff;
+    max-width: 540px;
+    margin: 0 auto;
+    padding: 25px;
+}
+
+.btnLog {
+    width: 100%;
+}
+
+.btnPrimary {
+    color: #fff;
+    background-color: #337ab7;
+    border-color: #2e6da4;
+}
+
+.mutedLabel {
+    font-size: 14px;
+    line-height: 1.42857143;
+    color: #777;
+}
+
+.alert__icon-box {
+
+    font: 100;
+    font-style: normal;
+    font-size: 10px;
+    color: rgb(143, 44, 44);
+}
+
+.alert__icon-box #clearPasswordText {
+    margin-top: 5px;
+}
+
+.alert__icon-box #alert__message {
+    font: 200;
+    font-size: 12px;
+    font-weight: 200;
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    margin-top: 2px;
+}
+
+.Icon {
+    float: right;
+    margin-left: -25px;
+    margin-right: 15px;
+    margin-top: -28px;
+    position: relative;
+    z-index: 2;
+    cursor: pointer;
+    color: #5e5d5d;
+}
+
+.loader {
+    display: none;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #ce8b05;
+    border-radius: 50%;
+    width: 12px;
+    height: 12px;
+    animation: spin 2s linear infinite;
+    margin-right: 8px;
+    /* Adjust margin as needed */
+}
+
+#loginButton {
+    position: relative;
+    padding: 5px 24px;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s;
+}
