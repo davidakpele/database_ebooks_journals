@@ -240,6 +240,134 @@ label{
     color: #a2a2a2;
     background-color: white;
 }
+
+
+
+/* Centering container */
+.journal-spinner-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top:-30px;
+    margin-left: 30px; 
+}
+
+.journal-spinner,
+.journal-spinner:before,
+.journal-spinner:after {
+    border-radius: 50%;
+    width: 1.5em;
+    height: 1.5em;
+    -webkit-animation-fill-mode: both;
+    animation-fill-mode: both;
+    -webkit-animation: load7 1.8s infinite ease-in-out;
+    animation: load7 1.8s infinite ease-in-out;
+}
+
+.journal-spinner {
+    color: #080707;
+    font-size: 8px;
+    position: relative;
+    text-indent: -9999em;
+    -webkit-transform: translateZ(0);
+    -ms-transform: translateZ(0);
+    transform: translateZ(0);
+    -webkit-animation-delay: -0.16s;
+    animation-delay: -0.16s;
+}
+
+.journal-spinner:before,
+.journal-spinner:after {
+    content: '';
+    position: absolute;
+    top: 0;
+}
+
+.journal-spinner:before {
+    left: -3.5em;
+    -webkit-animation-delay: -0.32s;
+    animation-delay: -0.32s;
+}
+
+.journal-spinner:after {
+    left: 2.5em;
+}
+
+@-webkit-keyframes load7 {
+
+    0%,
+    80%,
+    100% {
+        box-shadow: 0 1.5em 0 -1.3em;
+    }
+
+    40% {
+        box-shadow: 0 1.5em 0 0;
+    }
+}
+
+@keyframes load7 {
+
+    0%,
+    80%,
+    100% {
+        box-shadow: 0 2.5em 0 -1.3em;
+    }
+
+    40% {
+        box-shadow: 0 2.5em 0 0;
+    }
+}
+#loading-more{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: -20px;
+    margin-left: 2px;
+}
+
+#loading-more .loading-text {
+    font-size: 18px;
+    color: #333;
+    font-weight: bold;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-family: monospace;
+}
+
+#loading-more .dot {
+    display: inline-block;
+    opacity: 0;
+    animation: blink 1.4s infinite both;
+}
+
+#loading-more .dot:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+#loading-more .dot:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+#loading-more .dot:nth-child(4) {
+    animation-delay: 0.6s;
+}
+
+/* Keyframes for blinking effect */
+@keyframes blink {
+
+    0%,
+    20%,
+    100% {
+        opacity: 0;
+    }
+
+    50% {
+        opacity: 1;
+    }
+}
 /* width */
 /* ::-webkit-scrollbar {
     width: 5px;
@@ -262,3 +390,5 @@ label{
 /* ::-webkit-scrollbar-thumb:hover {
     background: #c5bebe;
 } */
+
+

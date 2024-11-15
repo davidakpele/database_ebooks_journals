@@ -16,27 +16,32 @@ use \SecurityFilterChainBlock\UrlFilterChain;
 final class FormController extends Controller
 {
 
-    private $repository;
+    private $GettingRepository;
+    private $StoreRepository;
 
     public function __construct() {
-       @$this->repository = @$this->loadModel('Getting');
+       $this->StoreRepository = @$this->loadModel('Store');
+       $this->GettingRepository = @$this->loadModel('Getting');
     }
 
     
     public function index(){
-        
         if (RequestHandler::isRequestMethod('GET')) {
-            $getcategories = $this->repository->_selectCategories();
-            $getbookshalves = $this->repository->_selectBookshelves();
+            $getcategories = $this->GettingRepository->_selectCategories();
+            $getbookshalves = $this->GettingRepository->_selectBookshelves();
             $data=['cat'=>$getcategories, 'book'=>$getbookshalves];
             $this->view("form", $data);
-        }else if (RequestHandler::isRequestMethod('POST')) {
-            // 1. Validate and sanitize static fields
+        }else if(RequestHandler::isRequestMethod('POST')) {
+            // Decode the JSON data from the 'data' field
+            $jsonData = json_decode($_POST['data'], true);
+            $issues = $jsonData['issues'];
+
+            // Step 1: Validate and sanitize static fields
             $categorieid = isset($_POST['categorieid']) ? htmlspecialchars($_POST['categorieid']) : '';
             $bookshelvesid = isset($_POST['bookshelvesid']) ? htmlspecialchars($_POST['bookshelvesid']) : '';
             $journal_name = isset($_POST['journal_name']) ? htmlspecialchars($_POST['journal_name']) : '';
-
-            // Validation (e.g., check if fields are empty)
+            
+            // Check required fields
             $errors = [];
             if (empty($categorieid)) {
                 $errors['categorieid'] = "Category is required.";
@@ -48,153 +53,85 @@ final class FormController extends Controller
                 $errors['journal_name'] = "Journal name is required.";
             }
 
-            // 2. Validate and process uploaded file (if any)
+            // Step 2: Handle file upload validation and saving
             if (isset($_FILES['file']) && $_FILES['file']['error'] == UPLOAD_ERR_OK) {
                 $photo = $_FILES['file'];
-                $name = $photo['name'];
-                $nameArray = explode('.', $name);
-                $fileExt = strtolower(end($nameArray)); // Get the file extension and convert it to lowercase
-
-                // Allowed file extensions
+                $nameArray = explode('.', $photo['name']);
+                $fileExt = strtolower(end($nameArray));
                 $allowedExts = ['png', 'jpeg', 'jpg', 'svg'];
-                
-                // Allowed MIME types
                 $allowedMimeTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml'];
-
-                // MIME type from the uploaded file
                 $imgType = $photo['type'];
+                $tmpLoc = $photo['tmp_name'];
+                $fileSize = $photo['size'];
 
-                // Temp location of the file
-                $tmpLoc = $photo['tmp_name'];   
-                $fileSize = $photo['size']; 
-
-                // Form data
-                $bookshelvesid = $_POST['bookshelvesid'];
-                $categorieid = $_POST['categorieid'];
-                $journal_name = $_POST['journal_name'];
-
-                // Check if required fields are empty
-                if (empty($bookshelvesid) || empty($categorieid) || empty($journal_name)) {
-                    echo "All fields are required.";
-                    return false;
-                }
-
-                // Check if the file type is allowed
+                // Validate file type and size
                 if (!in_array($fileExt, $allowedExts) || !in_array($imgType, $allowedMimeTypes)) {
-                    echo "Only PNG, JPEG, JPG, and SVG files are allowed.";
-                    return false;
+                    $errors['file'] = "Only PNG, JPEG, JPG, and SVG files are allowed.";
                 }
-
-                // Ensure the file size is within the limit (example: 50MB)
                 if ($fileSize > 50000000) {
-                    echo "Your file is too large. Maximum file size is 50MB.";
-                    return false;
+                    $errors['file'] = "File size exceeds the 50MB limit.";
                 }
 
-                // Define the upload path
-                $uploadName = uniqid() . '.' . $fileExt;
-                $uploadPath = 'assets/images/journals/' . trim(filter_var($bookshelvesid, FILTER_SANITIZE_STRING)) . '/' . $uploadName; 
-                $dbpath = 'assets/images/journals/' . trim(filter_var($bookshelvesid, FILTER_SANITIZE_STRING)) . '/' . $uploadName;
-                $folder = 'assets/images/journals/' . trim(filter_var($bookshelvesid, FILTER_SANITIZE_STRING));
+                // Define upload path if no errors
+                if (empty($errors['file'])) {
+                    $uploadName = uniqid() . '.' . $fileExt;
+                    $folder = 'assets/images/journals/' . filter_var($bookshelvesid, FILTER_SANITIZE_STRING);
+                    $uploadPath = $folder . '/' . $uploadName;
 
-                // Check if the folder exists, if not, create it
-                if (!file_exists($folder)) {
-                    mkdir($folder, 0777, true);
+                    // Create folder if it doesn't exist
+                    if (!file_exists($folder)) {
+                        mkdir($folder, 0777, true);
+                    }
                 }
-                move_uploaded_file($tmpLoc,$dbpath);
-                
             } else {
                 $errors['file'] = "File upload failed.";
             }
 
-            // 3. Process dynamic issues and articles
-            $issues = [];
+            // Step 3: Process dynamic issues and articles (using the decoded JSON)
             $issueIndex = 0;
-            while (isset($_POST["issueDate$issueIndex"])) {
+            while (isset($jsonData["issueDate$issueIndex"])) {
                 $issue = [
-                    'date' => htmlspecialchars($_POST["issueDate$issueIndex"]),
-                    'title' => htmlspecialchars($_POST["issueTitle$issueIndex"]),
-                    'volume' => htmlspecialchars($_POST["issueVolume$issueIndex"]),
+                    'date' => filter_var($jsonData["issueDate$issueIndex"], FILTER_SANITIZE_STRING),
+                    'title' => filter_var($jsonData["issueTitle$issueIndex"], FILTER_SANITIZE_STRING),
+                    'volume' => filter_var($jsonData["issueVolume$issueIndex"], FILTER_SANITIZE_STRING),
                     'articles' => []
                 ];
 
                 // Process articles within each issue
                 $articleIndex = 0;
-                while (isset($_POST["author{$issueIndex}-$articleIndex"])) {
+                while (isset($jsonData["author{$issueIndex}-$articleIndex"])) {
                     $article = [
-                        'author' => htmlspecialchars($_POST["author{$issueIndex}-$articleIndex"]),
-                        'apiWebInContextLink' => htmlspecialchars($_POST["apiWebInContextLink{$issueIndex}-$articleIndex"]),
-                        'date' => htmlspecialchars($_POST["date{$issueIndex}-$articleIndex"]),
-                        'openAccess' => htmlspecialchars($_POST["openAccess{$issueIndex}-$articleIndex"]),
-                        'title' => htmlspecialchars($_POST["title{$issueIndex}-$articleIndex"])
+                        'author' => filter_var($jsonData["author{$issueIndex}-$articleIndex"], FILTER_SANITIZE_STRING),
+                        'apiWebInContextLink' => filter_var($jsonData["apiWebInContextLink{$issueIndex}-$articleIndex"], FILTER_SANITIZE_URL),
+                        'date' => filter_var($jsonData["date{$issueIndex}-$articleIndex"], FILTER_SANITIZE_STRING),
+                        'openAccess' => filter_var($jsonData["openAccess{$issueIndex}-$articleIndex"], FILTER_VALIDATE_BOOLEAN),
+                        'title' => filter_var($jsonData["title{$issueIndex}-$articleIndex"], FILTER_SANITIZE_STRING)
                     ];
                     $issue['articles'][] = $article;
                     $articleIndex++;
                 }
-
                 $issues[] = $issue;
                 $issueIndex++;
             }
 
-            // 4. Final validation check and response
+            // Step 4: Final validation check and save data if no errors
             if (empty($errors)) {
-                if ($this->repository->save_journal($categorieid, $bookshelvesid, $journal_name, $issues, $imgType, $uploadPath)) {
-                    echo 'Uploaded Successfully';
-                } 
+                // Save data to repository
+                if ($this->StoreRepository->save_journal($categorieid, $bookshelvesid, $journal_name, $issues, $imgType, $uploadPath)) {
+                    echo 'Uploaded Successfully'; 
+
+                    // Move the uploaded file to its destination 
+                    move_uploaded_file($tmpLoc, $uploadPath);
+                } else {
+                    echo 'Error saving journal data.';
+                }
             } else {
-                // Return validation errors
+                // Output validation errors
                 echo "There were errors in your form:";
                 print_r($errors);
             }
         }
-        
 
-        
-        //     if (is_uploaded_file($_FILES['file']['tmp_name']) && empty($_POST['journal_name'])){
-        //         if((isset($_FILES['file']['name']) != '')){
-               
-        //             $photo = $_FILES['file'];
-        //             $name = $photo['name'];
-        //             $nameArray = explode('.', $name);
-        //             $fileName = $nameArray[0];
-        //             $fileExt = $nameArray[1];
-        //             $mime = explode('/', $photo['type']);
-        //             $mimeType = $mime[0];
-        //             $imgType = $photo['type'];
-        //             $mimeExt = $mime[1];
-        //             $tmpLoc = $photo['tmp_name'];   
-        //             $fileSize = $photo['size']; 
-        //             //to specify what file type we want to upload, i.e [png, jpeg, jpg, svg]
-        //             $bookshelvesid=$_POST['bookshelvesid'];
-        //             $categorieid=$_POST['categorieid'];
-        //             $journal_name=$_POST['journal_name'];
-        //             if (empty($bookshelvesid) || empty($categorieid) || empty($journal_name)) {
-        //                 echo "All feilds requireds.*";
-        //                 return false;
-        //             }
-        //             $uploadName = uniqid().'.'.$fileExt;
-        //             $uploadPath = 'assets/images/journals/'.trim(filter_var($_POST['bookshelvesid'], FILTER_SANITIZE_STRING)).'/'.$uploadName; 
-        //             $dbpath     = 'assets/images/journals/'.trim(filter_var($_POST['bookshelvesid'], FILTER_SANITIZE_STRING)).'/'.$uploadName;
-        //             $folder = 'assets/images/journals/'.trim(filter_var($_POST['bookshelvesid'], FILTER_SANITIZE_STRING));
-        //             if ($fileSize > 90000000000000) {
-        //                 $response['status'] = 300;
-        //                 $response['errormsg'] = '<b>ERROR:</b>Your file was larger than 50kb in file size.';
-        //             }elseif ($fileSize < 90000000000000 ) {
-        //                 if(!file_exists($folder)){
-        //                     mkdir($folder,077,true);
-        //                 }
-        //                 move_uploaded_file($tmpLoc,$dbpath);
-        //                 if ($this->repository->__saveLogoChanges($bookshelvesid,$categorieid,$journal_name,$imgType,$uploadPath)) {
-        //                     echo 'Uploaded Successfully';
-        //                 } 
-        //             }
-        //         }
-        // }else{
-        //     echo "Please provide journal name or description and select a valid image.";
-        //     return false;
-        // }
-        
-        
-    
+
     }
 }

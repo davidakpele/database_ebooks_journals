@@ -164,6 +164,8 @@ final class LibrariesController extends Controller
                     }
                 
                 }
+            }else{
+                redirect("/");          
             }
         }
     }

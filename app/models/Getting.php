@@ -136,7 +136,7 @@
             $data = [];
             // set the default timezone to use.
             date_default_timezone_set('UTC');
-            $this->_connect_db->query(/** @lang text */"SELECT p.packageid, s.subjectid, s.package_id, c.subjectid, c.categoriesid, jn.*  FROM package p  INNER JOIN subjects s ON s.package_id=p.packageid  INNER JOIN categories c ON c.subjectid=s.subjectid  INNER JOIN journals jn ON jn.categoryid= c.categoriesid  WHERE p.packageid=:package  AND c.categoriesid=:category_as_bookcases  AND s.subjectid=:subject  GROUP BY jn.journal_name ASC LIMIT :offset, :itemsPerPage");
+            $this->_connect_db->query(/** @lang text */"SELECT p.packageid, s.subjectid, s.package_id, c.subjectid, c.categoriesid, jn.*  FROM package p  INNER JOIN subjects s ON s.package_id=p.packageid  INNER JOIN categories c ON c.subjectid=s.subjectid  INNER JOIN journals jn ON jn.categoriesid= c.categoriesid  WHERE p.packageid=:package  AND c.categoriesid=:category_as_bookcases  AND s.subjectid=:subject  GROUP BY jn.journal_name ASC LIMIT :offset, :itemsPerPage");
             $this->_connect_db->bind(':package', $package);
             $this->_connect_db->bind(':subject', $subject);
             $this->_connect_db->bind(':offset', $offset);
@@ -229,7 +229,7 @@
             $data = [];
             // set the default timezone to use.
             date_default_timezone_set('UTC');
-            $this->_connect_db->query(/** @lang text */"SELECT p.packageid, s.subjectid, s.package_id, c.subjectid, c.categoriesid, jn.*   FROM package p  INNER JOIN subjects s ON s.package_id=p.packageid  INNER JOIN categories c ON c.subjectid=s.subjectid  INNER JOIN journals jn ON jn.categoryid= c.categoriesid WHERE p.packageid=:package  AND s.subjectid=:subject GROUP BY jn.journal_name ASC LIMIT :offset, :itemsPerPage ");
+            $this->_connect_db->query(/** @lang text */"SELECT p.packageid, s.subjectid, s.package_id, c.subjectid, c.categoriesid, jn.*   FROM package p  INNER JOIN subjects s ON s.package_id=p.packageid  INNER JOIN categories c ON c.subjectid=s.subjectid  INNER JOIN journals jn ON jn.categoriesid= c.categoriesid WHERE p.packageid=:package  AND s.subjectid=:subject GROUP BY jn.journal_name ASC LIMIT :offset, :itemsPerPage ");
             $this->_connect_db->bind(':package', $package);
             $this->_connect_db->bind(':subject', $subject);
             $this->_connect_db->bind(':offset', $offset);
@@ -265,70 +265,6 @@
         }
 
         /** @noinspection PhpVoidFunctionResultUsedInspection */
-        public function save_journal($categorieid, $bookshelvesid, $journal_name, $issues, $imgType, $uploadPath) {
-                // Check for the last inserted journal id
-                $this->_connect_db->query("SELECT * FROM `journals` ORDER BY journalid DESC LIMIT 1");
-                $result = $this->_connect_db->single();
-                
-                if (empty($result)) {
-                    $id = 101; // Start journalid from 101 if no records are found
-                } else {
-                    $oldid = $result->journalid;
-                    $id = $oldid + 1;
-                }
-
-                // Insert new journal data
-                $this->_connect_db->query("INSERT INTO `journals`(`journalid`, `bookshelvesid`, `categoryid`, `journal_name`, `imagetype`, `imagedata`) VALUES (:id, :bookshelvesid, :categorieid, :journal_name, :imgType, :uploadPath)");
-                $this->_connect_db->bind(':id', $id);
-                $this->_connect_db->bind(':bookshelvesid', $bookshelvesid);
-                $this->_connect_db->bind(':categorieid', $categorieid);
-                $this->_connect_db->bind(':journal_name', $journal_name);
-                $this->_connect_db->bind(':imgType', $imgType);
-                $this->_connect_db->bind(':uploadPath', $uploadPath);
-
-                // Execute insert
-                if ($this->_connect_db->execute()) {
-                    // If the journal is inserted successfully, now insert the issues
-                    foreach ($issues as $issue) {
-                        if (is_array($issue['articles']) && !empty($issue['articles'])) {
-                            $this->_connect_db->query("INSERT INTO `issues`(`date`, `title`, `volume`)VALUES (:issue_date, :issue_title, :volume)");
-                            $this->_connect_db->bind(':issue_date', $issue['date']);
-                            $this->_connect_db->bind(':issue_title', $issue['title']);
-                            $this->_connect_db->bind(':volume', $issue['volume']);
-                        
-                            if ($this->_connect_db->execute()) {
-                                // Get the inserted issue ID
-                                $issue_id = $this->_connect_db->lastInsertId();
-                                
-                                // Now insert the corresponding articles for this issue
-                                foreach ($issue['articles'] as $article) {
-                                    $this->_connect_db->query("INSERT INTO `articles`( `issue_id`, `author`, `api_web_link`, `date`, `open_access`, `title`) 
-                                        VALUES (:issue_id, :author, :apiWebInContextLink, :date, :openAccess, :title)");
-                                    
-                                    $this->_connect_db->bind(':issue_id', $issue_id);
-                                    $this->_connect_db->bind(':author', $article['author']);
-                                    $this->_connect_db->bind(':apiWebInContextLink', $article['apiWebInContextLink']);
-                                    $this->_connect_db->bind(':date', $article['date']);
-                                    $this->_connect_db->bind(':openAccess', $article['openAccess']);
-                                    $this->_connect_db->bind(':title', $article['title']);
-                                    
-                                    if (!$this->_connect_db->execute()) {
-                                        return false;
-                                    }
-                                }
-                            } else {
-                                return false;
-                            }
-                        }
-                        
-                    }
-                    return true; 
-                } else {
-                    return false;
-                }
-        }
-
-        /** @noinspection PhpVoidFunctionResultUsedInspection */
         public function get_header_core($cid, $bshid){
             $responses= [];
             $this->_connect_db->query(/** @lang text */"SELECT categoriesid, categories_name FROM categories WHERE categoriesid=:cid");
@@ -359,6 +295,7 @@
             }
         }
 
+        /** @noinspection PhpVoidFunctionResultUsedInspection */
         public function get_issue_years($id){
             $this->_connect_db->query(/** @lang text */ "SELECT * FROM `issuedyears` WHERE journalId=:id");
             $this->_connect_db->bind(':id', $id);
@@ -370,6 +307,7 @@
             }
         }
 
+        /** @noinspection PhpVoidFunctionResultUsedInspection */
         public function isVerifyAuthUser($iss, $aud, $iat){
             $this->_connect_db->query(/** @lang text */ 'SELECT a.institution_email, a.user_id, b.* FROM users a inner join user_subscription b 
             on a.user_id = b.user_id WHERE a.institution_email = :iss AND b.package_id=:aud AND b.user_token=:iat');
@@ -385,6 +323,7 @@
             }
         }
         
+        /** @noinspection PhpVoidFunctionResultUsedInspection */
         public function LoginAuth($email, $password){
             $this->_connect_db->query(/** @lang text */ 'SELECT a.*, b.* FROM users a inner join user_subscription b on a.user_id = b.user_id WHERE institution_email = :email');
             // Bind the values
@@ -401,6 +340,69 @@
                 return false;
             }
         }
+
+        /** @noinspection PhpVoidFunctionResultUsedInspection */
+        public function get_journal_details_by_id($journalId) {
+            $this->_connect_db->query(
+                "SELECT b.bookshelvesid, b.bookshelves_name, j.journalid AS journal_id, j.categoriesid, j.bookshelvesid, j.journal_name, j.bookshelvesid AS relational_id, 
+                        i.date AS issue_date, i.title AS issue_title, i.volume AS issue_volume, 
+                        v.title AS volume_title, v.volume_number, 
+                        a.author AS article_author, a.api_web_link AS apiWebInContextLink, a.date AS article_date, 
+                        a.open_access AS openAccess, a.title AS article_title
+                FROM journals j
+                INNER JOIN issues i ON j.journalid = i.journalid
+                INNER JOIN volumes v ON i.id = v.issue_id
+                INNER JOIN articles a ON v.volume_id = a.volume_id
+                INNER JOIN bookshelves b ON b.bookshelvesid=j.bookshelvesid
+                WHERE j.journalid = :journalId"
+            );
+            $this->_connect_db->bind(':journalId', $journalId);
+            $responses = $this->_connect_db->resultSet();
+            // Initialize the response structure
+            if (!empty($responses)) {
+                $journal = [
+                    'categorieid' => $responses[0]['categoriesid'],
+                    'bookshelvesid' => $responses[0]['bookshelvesid'],
+                    'journal_name' => $responses[0]['journal_name'],
+                    'related_journals'=>$responses[0]['bookshelves_name'],
+                    'issues' => []
+                ];
+
+                // Process each row
+                foreach ($responses as $response) {
+                    // Group by issue date
+                    $issueDate = $response['issue_date'];
+                    if (!isset($journal['issues'][$issueDate])) {
+                        $journal['issues'][$issueDate] = [
+                            'volumes' => []
+                        ];
+                    }
+
+                    // Group by volume title within the issue date
+                    $volumeTitle = $response['volume_title'];
+                    if (!isset($journal['issues'][$issueDate]['volumes'][$volumeTitle])) {
+                        $journal['issues'][$issueDate]['volumes'][$volumeTitle] = [
+                            'title' => $response['volume_title'],
+                            'volume' => $response['issue_volume'],
+                            'articles' => []
+                        ];
+                    }
+
+                    // Add each article to the corresponding volume
+                    $journal['issues'][$issueDate]['volumes'][$volumeTitle]['articles'][] = [
+                        'author' => $response['article_author'],
+                        'apiWebInContextLink' => $response['apiWebInContextLink'],
+                        'date' => $response['article_date'],
+                        'openAccess' => $response['openAccess'] === 'true',
+                        'title' => $response['article_title']
+                    ];
+                }
+                
+                return $journal;
+            } else {
+                return [];
+            }
+        }
+
 }
-      
-                                       
+    

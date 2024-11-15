@@ -6,6 +6,7 @@ use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use  Session\UserSessionManager;
 use Exception\RequestException;
+use App\Helpers\Model\Repository\Injection\Repository;
 
 /**
  *
@@ -20,10 +21,17 @@ final class SecurityFilterChain
     private $msg_block;
     private $responses;
     private $jwtKey;
+    private $UserRepository;
 
     public function __construct() {
-       @$this->jwtKey = PRIVATE_KEY;
-    }
+        @$this->jwtKey = PRIVATE_KEY;
+        $this->UserRepository = Repository::loadModel('User');
+
+        if (!$this->UserRepository) {
+            // Handle error if model could not be loaded
+            throw new \Exception("Repository class 'User Repository' could not be loaded.");
+        }
+    }   
 
     public function protectedChainblock(){
         // check if user is authenticated
@@ -73,24 +81,47 @@ final class SecurityFilterChain
     }
 
     public function verifyToken($token){
-        $decoded = JWT::decode($token, new Key($this->jwtKey, 'HS256'));
-        if (http_response_code() == 200) {
-            header('HTTP/1.1 200 OK');
-            $responses['data']=[
-                'status'=>'202',
-                'token'=>$token
-            ];
-            return $responses;
-        }else{
-            $authClass= new JwtService();
-            $getJwtToken = $authClass::createTokenByUserDetails();
-            $newtoken= json_decode($getJwtToken)->token; 
-            header('HTTP/1.1 200 Reset Content');
-            $responses['data']=[
-                'status'=>'205',
-                'token'=>$newtoken
-            ];
-            return $responses;
+        try {
+            $tokenClass= new JwtService();
+            $jwt_decoded_token = $tokenClass::decodeToken($token);
+            if (isset($jwt_decoded_token['data']['decoded']['message']) || array_key_exists('message', $jwt_decoded_token['data']['decoded'])) {
+                header('HTTP/1.1 401 Unauthorized');
+                $error_response = array(
+                    "status" => http_response_code(401),
+                    "title" => "Authentication Error",
+                    "details" => "Invalid Token: " . $jwt_decoded_token['data']['decoded']['message'],
+                );
+                echo json_encode($error_response, JSON_PRETTY_PRINT);
+                exit();
+            }else{
+                $user_encoded_email = $jwt_decoded_token['data']['decoded']['payload']->sub;
+                $user_encoded_id = $jwt_decoded_token['data']['decoded']['payload']->group->id;
+                $user_encoded_package_id = $jwt_decoded_token['data']['decoded']['payload']->group->package;
+                
+                $verifyUser = $this->UserRepository->verifyUserAccount($user_encoded_email, $user_encoded_id, $user_encoded_package_id);
+                if ($verifyUser) {
+                    return true; // Token is valid, user is verified
+                } else {
+                    header('HTTP/1.1 401 Unauthorized');
+                    $error_response = array(
+                        "status" => http_response_code(401),
+                        "title" => "Authentication Error",
+                        "details" => "Unauthorized",
+                    );
+                    echo json_encode($error_response, JSON_PRETTY_PRINT);
+                    exit();
+                }
+            }
+        } catch (Exception $e) {
+            // If any error occurs (e.g., JWT signature verification fails), return a 401 error
+            header('HTTP/1.1 401 Unauthorized');
+            $error_response = array(
+                "status" => http_response_code(401),
+                "title" => "Authentication Error",
+                "details" => "Invalid Token: " . $e->getMessage(),
+            );
+            echo json_encode($error_response, JSON_PRETTY_PRINT);
+            exit();
         }
     }
 }

@@ -10,20 +10,25 @@ use Firebase\JWT\ExpiredException;
 
 final class JwtService
 {
-    private $jwtKey;
+    private static $jwtKey;
     private $isoArray;
 
     public function __construct() {
-       @$this->isoArray = [];
+        $this->isoArray = [];
+        self::$jwtKey = getenv('API_SECURITY_KEY');
     }
-    public static function createTokenByUserDetails($id, $email, $package):string{
-        $key = base64_decode('lcBCilFEQT0SWEZcCQhGx2UaCZcxPx4bYBfrGM0DVKDJycK2UL4dDJqAkZ8r4IBQxSa3S2wlTVlnVVzvzP5sfzPtLUournmEY2N3ZGVnQ1BtWEF0anZ0aDNLNHJhaHh9IkFVaj0PXA==');
 
-        $headers = ['typ' => 'JWT']; // Explicitly set the 'typ' header
+    public static function createTokenByUserDetails($id, $email, $package):string{
+        $key = base64_decode(self::$jwtKey);
+        $headers = ['typ' => 'JWT'];
 
         $payload = [
             'roles' => ['SECRET_USER'],
-            'sub' => 'kim',
+            'sub' => $email,
+            'group'=>[
+                'package'=> $package,
+                'id'=>$id
+            ],
             'iat' => time(),
             'exp' => time() + 60 * 60 * 24, // 24 hours expiration
         ];
@@ -33,20 +38,54 @@ final class JwtService
     }
 
     public static function createRefreshTokenByUserDetails($id, $email, $package):string{
-        $key = PRIVATE_KEY;
+        $key = base64_decode(self::$jwtKey);
         $email =(isset($_SESSION['institution_email']) && !empty($_SESSION['institution_email'])) ? $_SESSION['institution_email'] : '';
         $ioUToken = (isset($_SESSION['session_token']) && !empty($_SESSION['session_token'])) ? $_SESSION['session_token'] : '' ;
         $package = (isset($_SESSION['packageId']) && !empty($_SESSION['packageId'])) ? $_SESSION['packageId'] : '' ;
 
         $payload = [
-            'email' => $email,
-            'package' => $package,
+            'roles' => ['SECRET_USER'],
+            'sub' => $email,
+            'group'=>[
+                'package'=> $package,
+                'id'=>$id
+            ],
             'subscription_token' => $ioUToken,
             'iat' => time(),            // Issued at: current time
             'exp' => time() + 60, 
         ];
         $jwt = JWT::encode($payload, $key, 'HS256');
         return $jwt;
+    }
+
+    
+    public static function decodeToken($token) {
+        try {
+            $key = base64_decode(self::$jwtKey);
+            $decoded = JWT::decode($token, new Key($key, 'HS256'));
+
+            return [
+                'status' => '202',
+                'data' => [
+                    'token' => $token,
+                    'decoded' => (array) $decoded,
+                ]
+            ];
+        } catch (ExpiredException $e) {
+            // Return a specific message for expired tokens
+            return [
+                'status' => '401',
+                'error' => 'Token expired',
+                'details' => 'The token has expired. Please request a new one.'
+            ];
+        } catch (SignatureInvalidException | BeforeValidException | UnexpectedValueException | InvalidArgumentException $e) {
+            // Return a general error response for other JWT issues
+            return [
+                'status' => '401',
+                'error' => 'Invalid token',
+                'details' => $e->getMessage()
+            ];
+        }
     }
 
     public static function isNotValidUserToken():bool{

@@ -5,6 +5,7 @@ require_once "..".DIRECTORY_SEPARATOR."app".DIRECTORY_SEPARATOR."config".DIRECTO
 require_once "..".DIRECTORY_SEPARATOR."app".DIRECTORY_SEPARATOR."config".DIRECTORY_SEPARATOR."controller.php";
 require_once "..".DIRECTORY_SEPARATOR."app".DIRECTORY_SEPARATOR."config".DIRECTORY_SEPARATOR."app.php";
 require_once "..".DIRECTORY_SEPARATOR."app".DIRECTORY_SEPARATOR."config".DIRECTORY_SEPARATOR."Mailer.php";
+require_once "..".DIRECTORY_SEPARATOR."app".DIRECTORY_SEPARATOR."config".DIRECTORY_SEPARATOR."repository.php";
 require_once "..".DIRECTORY_SEPARATOR."app".DIRECTORY_SEPARATOR."helpers".DIRECTORY_SEPARATOR."Route.php";
 require_once "..".DIRECTORY_SEPARATOR."app".DIRECTORY_SEPARATOR."helpers".DIRECTORY_SEPARATOR."RequestHandler.php";
 require_once "..".DIRECTORY_SEPARATOR."app".DIRECTORY_SEPARATOR."helpers".DIRECTORY_SEPARATOR."RequestException.php";
